@@ -43,21 +43,45 @@ export class PDFViewerComponent extends HTMLElement {
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i)
           const textContent = await page.getTextContent()
-          const contentArray = [];
-          for (let i = 0, len = textContent.items.length; i < len; i++) {
-            contentArray.push(textContent.items[i].str);
+          const contentArray = textContent.items.map(item => item.str);
+
+          console.log('Full content array:', contentArray);
+
+          // Функция для извлечения элементов массива между маркерами
+          function extractElements(content) {
+            const startMarker = '(From';
+            const endMarker = 'Foreman Remarks';
+
+            const startIndex = content.findIndex(item => item.includes(startMarker));
+            const endIndex = content.findIndex(item => item.includes(endMarker));
+
+            console.log('Start marker index:', startIndex, content[startIndex]);
+            console.log('End marker index:', endIndex);
+
+            if (startIndex === -1 || endIndex === -1) {
+              console.log('One or both markers not found');
+              return [];
+            }
+
+            return content.slice(startIndex + 1, endIndex);
           }
-          const contents = contentArray.join(' ');
+
+          const extractedContents = extractElements(contentArray);
+
+          console.log('Extracted contents:', extractedContents);
 
           // Add page content to output
-          console.log(contents)
           output.pages.push({
             pageNumber: i,
-            content: contents
-          })
+            content: extractedContents
+          });
+
+          if (i === 1) {
+            return;
+          }
         }
 
-        //console.log(output)
+        console.log(output)
 
 
         // Вызываем метод для вывода информации о PDF

@@ -12,7 +12,8 @@
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^4.5.136",
     "pdfjs-serverless": "^0.5.1",
-    "vite-plugin-node-polyfills": "^0.22.0"
+    "vite-plugin-node-polyfills": "^0.22.0",
+    "xslx": "^1.0.0"
   },
   "devDependencies": {
     "vite": "^5.3.4"
