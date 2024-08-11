@@ -1,5 +1,7 @@
 import { resolvePDFJS } from 'pdfjs-serverless'
 
+import { ExcelCreatorComponent } from './ExcelCreatorComponent.js';
+
 export class PDFViewerComponent extends HTMLElement {
   constructor () {
     super();
@@ -12,16 +14,35 @@ export class PDFViewerComponent extends HTMLElement {
     this.setupFileInput();
   }
 
+  async createExcelFile(extractedContents) {
+    const excelCreator = new ExcelCreatorComponent();
+    await excelCreator.createExcelFile(extractedContents);
+  }
+
   async logPDFInfo(pdf) {
     console.log('PDF Information:');
     console.log('Number of pages:', pdf.numPages);
     console.log('PDF Version:', pdf.version);
     console.log('Is Encrypted:', pdf.isEncrypted);
-
-
   }
 
+  extractElements(content) {
+    const startMarker = 'Summary of Operations';
+    const endMarker = 'Foreman Remarks';
 
+    const startIndex = content.findIndex(item => item.includes(startMarker));
+    const endIndex = content.findIndex(item => item.includes(endMarker));
+
+    console.log('Start marker index:', startIndex, content[startIndex]);
+    console.log('End marker index:', endIndex);
+
+    if (startIndex === -1 || endIndex === -1) {
+      console.log('One or both markers not found');
+      return [];
+    }
+
+    return content.slice(startIndex + 1, endIndex);
+  }
 
   setupFileInput() {
     const fileInput = this.shadowRoot.getElementById('file-input');
@@ -31,7 +52,6 @@ export class PDFViewerComponent extends HTMLElement {
         const arrayBuffer = await file.arrayBuffer();
         this.pdfjs = await resolvePDFJS();
         const pdf = await this.pdfjs.getDocument({ data: arrayBuffer }).promise;
-
 
         const metadata = await pdf.getMetadata()
 
@@ -47,26 +67,7 @@ export class PDFViewerComponent extends HTMLElement {
 
           console.log('Full content array:', contentArray);
 
-          // Функция для извлечения элементов массива между маркерами
-          function extractElements(content) {
-            const startMarker = '(From';
-            const endMarker = 'Foreman Remarks';
-
-            const startIndex = content.findIndex(item => item.includes(startMarker));
-            const endIndex = content.findIndex(item => item.includes(endMarker));
-
-            console.log('Start marker index:', startIndex, content[startIndex]);
-            console.log('End marker index:', endIndex);
-
-            if (startIndex === -1 || endIndex === -1) {
-              console.log('One or both markers not found');
-              return [];
-            }
-
-            return content.slice(startIndex + 1, endIndex);
-          }
-
-          const extractedContents = extractElements(contentArray);
+          const extractedContents = this.extractElements(contentArray);
 
           console.log('Extracted contents:', extractedContents);
 
@@ -76,13 +77,15 @@ export class PDFViewerComponent extends HTMLElement {
             content: extractedContents
           });
 
+          // Создаем Excel файл
+          await this.createExcelFile(extractedContents);
+
           if (i === 1) {
             return;
           }
         }
 
         console.log(output)
-
 
         // Вызываем метод для вывода информации о PDF
         this.logPDFInfo(pdf);
@@ -91,7 +94,6 @@ export class PDFViewerComponent extends HTMLElement {
       }
     });
   }
-
 
   render() {
     this.shadowRoot.innerHTML = `
@@ -123,8 +125,6 @@ export class PDFViewerComponent extends HTMLElement {
       </div>
     `;
   }
-
-
 }
 
 customElements.define('pdf-viewer', PDFViewerComponent);
