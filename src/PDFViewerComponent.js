@@ -28,7 +28,7 @@ export class PDFViewerComponent extends HTMLElement {
 
   extractElements(content) {
     const startMarker = 'Summary of Operations';
-    const endMarker = 'Foreman Remarks';
+    const endMarker = 'Lost Time Details';
 
     const startIndex = content.findIndex(item => item.includes(startMarker));
     const endIndex = content.findIndex(item => item.includes(endMarker));
